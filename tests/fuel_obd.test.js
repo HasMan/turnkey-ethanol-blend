@@ -1,0 +1,10 @@
+"use strict";
+const assert = require('node:assert/strict');
+const {decodeFuelPid2F} = require('../apps/ethanol_mix/fuel_obd');
+assert.equal(decodeFuelPid2F([0x41,0x2F,0xDD]).percent.toFixed(2),'86.67');
+assert.equal(decodeFuelPid2F([0x41,0x2F,0xD8]).percent.toFixed(2),'84.71');
+assert.equal(decodeFuelPid2F([0x41,0x2F,0]).percent,0);
+assert.equal(decodeFuelPid2F([0x41,0x2F,255]).percent,100);
+assert.equal(decodeFuelPid2F([0x7F,0x01,0x12]).ok,false);
+assert.equal(decodeFuelPid2F([0x41,0x2F]).ok,false);
+console.log('fuel_obd.test.js: all checks passed');

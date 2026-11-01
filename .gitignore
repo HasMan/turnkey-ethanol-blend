@@ -1,0 +1,19 @@
+# Local BMW SDK, private vehicle data, and build output
+oap-sdk/
+dist/
+reference/
+node_modules/
+*.mgu
+*.tgz
+*.pcap
+*.enc
+*.pem
+*.key
+*id_rsa*
+*known_hosts*
+*.log
+*.csv
+*.zip
+.venv/
+__pycache__/
+.env*

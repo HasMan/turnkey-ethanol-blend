@@ -17,7 +17,7 @@
 
 ## Compatibility
 
-**Known test setup:** 2023 X3 M Competition (F97 LCI), S58, iDrive 7 MGU, with a CD919/MHD flex-fuel calibration. DME logical address `0x12`; ethanol RAM `0xB00060D2`; response `63 2B` corresponded to E43 in a test, cross-checked with an MHD log. Fuel level `01 2F` returned `41 2F DD` (86.67%) over ENET. This address **must not be assumed to work on another DME or calibration**.
+**Known test setup:** 2023 X3 M Competition (F97 LCI), S58, iDrive 7 MGU, with a MHD flex-fuel calibration. DME logical address `0x12`; ethanol RAM `0xB00060D2`; response `63 2B` corresponded to E43 in a test, cross-checked with an MHD log. Fuel level `01 2F` returned `41 2F DD` (86.67%) over ENET. This address **must not be assumed to work on another DME or calibration**.
 
 The default tank capacity in the app is **17.2 US gal**. Confirm the tank specification and actual fuel blend for your vehicle. Calculations assume an ideal, homogeneous mixture and do not account for fuel trapped in lines, sensor error, temperature effects, or dispenser variability. **Do not make fueling decisions based only on an unverified gauge or experimental KOMBI conversion.**
 

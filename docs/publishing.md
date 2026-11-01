@@ -1,25 +1,21 @@
-# Publishing on GitHub
+# Publishing updates
 
-Recommended repo: `turnkey-ethanol-blend`. Publish source under the MIT license only after confirming you have the right to license the original files.
+`mgu-repo.json` at this repo root is used by MGU Store when a user follows **Branches → main**. No bundled BMW SDK and no release assets are required. Use semantic `x.y.z` app versions in `apps/ethanol_mix/app.json` and the component entry in `mgu-repo.json` together, updating both when publishing a new release. Git revisions of an unchanged version can be offered as revision updates when following a branch.
 
-```powershell
-# Unpack the provided GitHub-ready ZIP into C:\MGU\turnkey-ethanol-blend
-cd C:\MGU\turnkey-ethanol-blend
-git init
-git add .
-git commit -m "Initial public beta source: TurnKey E Blend v0.1.6"
-git branch -M main
-```
-
-Create a **public, empty** GitHub repository at https://github.com/new (don't add a separate README or license there). Then:
+Local checks:
 
 ```powershell
-git remote add origin https://github.com/YOUR_ACCOUNT/turnkey-ethanol-blend.git
-git push -u origin main
-git tag v0.1.6-beta
-git push origin v0.1.6-beta
+node tests/blend.test.js
+node tests/fuel_obd.test.js
+python tests/test_store_metadata.py
 ```
 
-Make a GitHub Release from `v0.1.6-beta`, and attach only this source ZIP or a source tarball. **Do not attach the compiled `.mgu`**: the upstream kit indicates those artifacts embed BMW's copyrighted SDK and should not be publicly distributed without permission.
+Build smoke test requires locally extracted donor SDK under `oap-sdk/` and must never be run with SDK files in Git staging:
 
-After establishing licensing for a redistributable binary, revisit MGU Store listing/submission; the source repository alone doesn't automatically make an installable store app.
+```powershell
+python tools/build_store.py ethanol_mix
+```
+
+Only commit original or properly licensed source. **Never commit the generated `dist/` folder, `.mgu`, `oap-sdk/`, vehicle recordings, or keys.** Confirm `git status` before pushing. Never claim universal DME compatibility based on the one verified S58 calibration.
+
+After testing on a physical MGU, push with standard git commands and refresh the source within MGU Store. Owners should explicitly choose whether to install updates; no unattended install is built into this project.

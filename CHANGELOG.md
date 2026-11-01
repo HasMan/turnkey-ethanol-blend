@@ -11,3 +11,10 @@
 ## v0.1.5 (previous in-car build)
 
 - Introduced native BMW dropdown editor, which did not render reliably on the test vehicle.
+
+## MGU Store source distribution (repository update)
+- Added root `mgu-repo.json` for iDrive 7 branch-based repository source.
+- Added source-build wrapper producing SDK-free `.tgz` using the Store's donor SDK.
+- Included a minimal MIT-licensed upstream build/runtime subset with attribution.
+- Added Store installation and troubleshooting documentation, icon, CI and manifest tests.
+- Application features and version remain **0.1.6-beta**, pending physical head-unit testing.

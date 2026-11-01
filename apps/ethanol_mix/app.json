@@ -717,5 +717,8 @@
       ]
     }
   ],
-  "noAutoSettings": true
+  "noAutoSettings": true,
+  "mguHmi": [
+    "ID7"
+  ]
 }

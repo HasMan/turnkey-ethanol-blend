@@ -1,9 +1,23 @@
 # Third-party components and attribution
 
-This repository intentionally includes **only the TurnKey app module source**. Its imports of `./kit/*` are resolved when compiled with the separately obtained [idrive7-apps](https://github.com/cauliflowermossgrape/idrive7-apps) toolkit. No upstream runtime, C renderer, font atlas, SDK, firmware, or third-party binary is included here.
+The original TurnKey app module (`apps/ethanol_mix/main.js`, `blend.js`, `fuel_obd.js` and app manifest) is MIT-licensed by the TurnKey project.
 
-- `cauliflowermossgrape/idrive7-apps`: MIT for the toolkit generally, with separate GPL-licensed renderer/other components documented upstream.
-- BMW's `oap-sdk`: copyrighted proprietary material, **not included**.
-- BMW and BMW M brand names/stripes: descriptive references only; unofficial and not endorsed.
+## Included independent toolkit code
 
-The MIT license in this repository applies to original TurnKey app code. It does not relicense the external toolkit or BMW software.
+A limited subset of `cauliflowermossgrape/idrive7-apps` is included so MGU Store can build this app offline, directly on an authorized head unit:
+
+- `kit/runtime/` (JavaScript runtime, fonts and supporting resources)
+- `kit/tools/build.py`, `localize.py`, `pack_data.py`, `make_icon.js`, `locale-revisions.json`, `oapgen/gen.js`
+- `kit/platform/permissions.json`
+
+These files are from the publicly released MIT-licensed `cauliflowermossgrape/idrive7-apps` toolkit. Retain `LICENSE.idrive7-apps` and all existing notices. Some font assets have their own accompanying license: `kit/runtime/fonts/OFL-NotoSansSC.txt`.
+
+This repository does **not** include the upstream GPL/native renderer, its binary, or unrelated apps, and it does **not** claim the BMW SDK is open source.
+
+## Not included / not redistributable
+
+- BMW's proprietary `oap-sdk` (extracted locally by the MGU Store or by the owner from their own head unit)
+- Vehicle firmware, diagnostic recordings, VINs, authentication tokens, SSH keys or user data
+- Any compiled `.mgu` carrying an extracted BMW SDK
+
+MGU Store itself remains a separate project by `robertnisipeanu` under its own license. BMW, BMW M, MHD and other brands are referenced for compatibility only; no affiliation or endorsement is claimed.

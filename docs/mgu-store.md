@@ -22,6 +22,8 @@ Following the **main branch** enables revision-based Store updates when the repo
 
 ## Troubleshooting
 
+- **`dist/ethanol_mix@0.1.6.tgz: cannot copy it (EEXIST)`:** This was fixed by removing `build.output` from `mgu-repo.json` because the custom builder already writes to `MGU_OUT`. Refresh the GitHub branch source in MGU Store and retry the installation. Do **not** delete installed apps or reset iDrive to resolve this package-copy error.
+
 - **App missing from source:** ensure you selected a branch, not Releases, and `mgu-repo.json` exists at the root. Refresh/Check now.
 - **Build says missing donor SDK:** the Store could not prepare its `oap-sdk` folder. Check the installed MGU Store version and its donor-bundle diagnosis; no proprietary SDK is hosted in this repository.
 - **Failed to fetch repo:** confirm the MGU Store uplink is online and the repo is public, or follow the Store's offline USB instructions.

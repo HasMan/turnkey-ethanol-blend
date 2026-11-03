@@ -16,8 +16,7 @@
         "args": [
           "{id}"
         ],
-        "sdk": "oap-sdk",
-        "output": "dist/{id}@{version}.tgz"
+        "sdk": "oap-sdk"
       }
     }
   ]

@@ -12,7 +12,7 @@ assert (c['id'], c['kind'], c['path']) == ('ethanol_mix', 'app', 'apps/ethanol_m
 assert c['mguHmi'] == ['ID7']
 assert c['build']['python'] == 'tools/build_store.py'
 assert c['build']['sdk'] == 'oap-sdk'
-assert c['build']['output'] == 'dist/{id}@{version}.tgz'
+assert 'output' not in c['build'], 'Builder writes directly to MGU_OUT; output causes a duplicate copy (EEXIST)'
 assert app['id'] == c['id'] and app['version'] == c['version']
 assert (root / 'apps/ethanol_mix/icon.png').stat().st_size < 128 * 1024
 assert not (root / 'oap-sdk').exists(), 'Do not keep SDK in distributable repo'

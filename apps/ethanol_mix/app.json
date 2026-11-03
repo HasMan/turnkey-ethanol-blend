@@ -2,7 +2,7 @@
   "id": "ethanol_mix",
   "title": "TurnKey E Blend",
   "description": "M-style ethanol blending, reliable inline numeric editing through iDrive controller, DME PID 2F, experimental KOMBI fuel, 1s read-only polling",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "vendor": "TurnKey Performance",
   "loggingId": "OAA7",
   "iconGlyph": "E%",
@@ -704,7 +704,7 @@
       "key": "renderer",
       "label": "Renderer",
       "type": "choice",
-      "default": "auto",
+      "default": "software",
       "options": [
         [
           "auto",
@@ -714,7 +714,8 @@
           "software",
           "Software"
         ]
-      ]
+      ],
+      "reset": 1
     }
   ],
   "noAutoSettings": true,

@@ -5,7 +5,7 @@
 - iDrive 7 MGU, with user-authorized third-party app support and a functioning MGU Store installation.
 - Active Store internet uplink to fetch public GitHub repository sources (or use its official offline USB flow).
 - Car parked, stable electrical power and a backup before changing the app catalog.
-- Installed renderer compatible with the source app. Graphics and controller input need real-car validation.
+- Renderer compatibility varies by firmware; v0.1.7 defaults to the kit's own software PNG rendering so the optional GPU overlay is not required. Test on the actual vehicle.
 
 ## In-car install
 
@@ -19,6 +19,12 @@
 ## Updating and installed copies
 
 Following the **main branch** enables revision-based Store updates when the repository changes. Updates are not automatic. Existing manual `ethanol_mix` apps may already occupy that app ID; avoid uninstalling or overwriting the working version before recording its configuration and taking a backup.
+
+## v0.1.7 blank-display recovery test
+
+If v0.1.6 shows the native BMW title and Previous/Next/Edit buttons but an entirely blank drawing surface, v0.1.7 defaults to software rendering. The app's existing saved `renderer: auto` choice is migrated **once** to `software`; other saved settings are unchanged. This is a *diagnostic workaround* for a suspected MGU GPU-overlay incompatibility, not a confirmed root-cause fix. Use the Store's main-branch source, refresh, verify that v0.1.7 is offered, update while parked, and reopen.
+
+If it still renders blank, inspect the car's `ethanol_mix.log` (typically under `/var/opt/public/oap/oap_*/data/`) for errors such as failed image-resource creation, renderer connection, or app initialization. Do not uninstall a working prior version or reset iDrive as an experiment.
 
 ## Troubleshooting
 

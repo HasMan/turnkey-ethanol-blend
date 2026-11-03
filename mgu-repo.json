@@ -6,7 +6,7 @@
       "kind": "app",
       "title": "TurnKey E Blend",
       "description": "Live ethanol and fuel readings plus blend-to-full calculator (experimental, calibration-specific).",
-      "version": "0.1.6",
+      "version": "0.1.7",
       "path": "apps/ethanol_mix",
       "mguHmi": [
         "ID7"

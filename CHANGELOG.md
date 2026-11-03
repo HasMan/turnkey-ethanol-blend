@@ -1,3 +1,11 @@
+## v0.1.7-beta — software-render recovery test
+
+- Defaults to software rendering instead of the optional `mgu-render` GPU overlay.
+- One-time `renderer` settings migration (`reset: 1`) also changes persisted `auto` values to `software` on update. User can re-enable GPU rendering later if desired.
+- Keeps app ID `ethanol_mix`, calculation code, and all fuel input settings unchanged.
+- Investigates an in-car blank canvas after Store installation; **not yet verified on the vehicle**. If the canvas remains blank, collect `ethanol_mix.log` and do not guess at further fixes.
+- No BMW SDK distributed.
+
 # Changelog
 
 ## v0.1.6-beta (source preview)

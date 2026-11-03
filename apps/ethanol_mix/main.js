@@ -1,5 +1,5 @@
  'use strict';
-/** TurnKey E Blend 0.1.6. M Vitals-style pages and read-only auto diagnostics while the app is displayed, including when driving.
+/** TurnKey E Blend 0.1.5. M Vitals-style pages and read-only auto diagnostics while the app is displayed, including when driving.
  * DME 0x12: OBD mode 01 PID 2F => 41 2F xx, % = xx/255*100
  * S58-specific ethanol RAM read: 23 14 B0 00 60 D2 01 => 63 xx, xx = ethanol %
  * Both worked on this X3M over independent Windows ENET; MGU TASU still vehicle-test pending.
@@ -36,12 +36,12 @@ function label(cv,x,y,s,t,size=23){cv.text(s,x,y,size,t.dim,{font:'bold'});}
 function value(cv,x,y,s,t,size=58,c){cv.text(String(s),x,y,size,c||t.text,{font:'num'});}
 function panel(cv,t,x,y,w,h,title){G.panel(cv,t,x,y,w,h,title);}
 function subline(cv,x,y,s,t,size=19){cv.text(String(s),x,y,size,t.dim);}
-function marker(cv,t,x,y,w,h){cv.strokeRoundRect(x,y,w,h,9,4,YELLOW);}
+function marker(cv,t,x,y,w,h){cv.strokeRoundRect(x,y,w,h,9,t.sel||t.accent,3);}
 function banner(cv,t,str,c){cv.roundRect(22,469,1556,38,6,withAlpha('#ffffff',.04));cv.text(str,38,495,19,c||t.dim);}
 mgu.run({
  async start(ctx){
     const {ui,settings,log,signals}=ctx;
-    let page=0,diag=null,busy=false,editor=null,selectField=false,fieldIndex=0;
+    let page=0,diag=null,busy=false,editor=null;
     let vehicleSpeed=null,rawKombi=null,kombiAt=0,kombiSamples=0;
     let eth=null,ethAt=0,ethStatus='Waiting for first automatic read';
     let fuel=null,fuelRaw=null,fuelAt=0,fuelStatus='Waiting for first automatic read',fuelSamples=0,fuelChanges=0,fuelChangeAt=0;
@@ -112,35 +112,15 @@ mgu.run({
             busy=false;
         }
     }
-    function setPage(n){editor=null;selectField=false;page=(n+PAGES.length)%PAGES.length;return render();}
+    function setPage(n){editor=null;page=(n+PAGES.length)%PAGES.length;return render();}
     const inputBounds=[[18,48,770,204],[808,48,770,204],[18,265,770,204],[808,265,770,204]];
     const inBox=(x,y,box)=>x>=box[0]&&x<box[0]+box[2]&&y>=box[1]&&y<box[1]+box[3];
     function beginEdit(key){
         // Inputs are intentionally not editable while moving. Monitoring continues normally.
         if(num(vehicleSpeed)&&vehicleSpeed>2){log.info('edit blocked because vehicle is moving');return;}
         const item=settings.item(key);if(!item)return;
-        editor={key,kind:item.type==='choice'?'choice':'number',draft:'',error:'',cursor:0};selectField=false;
+        editor={key,kind:item.type==='choice'?'choice':'number',draft:'',error:''};
         return render();
-    }
-    const NUM_KEYS=['1','2','3','4','5','6','7','8','9','0','.','DEL','CANCEL','SAVE'];
-    function keysForEditor(){
-        if(!editor)return [];
-        if(editor.kind==='choice')return editor.key==='fuelMode'?['DME','MANUAL','KOMBI','CANCEL']:['DME','MANUAL','CANCEL'];
-        return NUM_KEYS;
-    }
-    function navigate(delta){
-        if(editor){const k=keysForEditor();editor.cursor=(editor.cursor+delta+k.length)%k.length;return render();}
-        if(selectField){fieldIndex=(fieldIndex+delta+5)%5;return render();}
-        return setPage(page+delta);
-    }
-    function editOrSelect(){
-        if(num(vehicleSpeed)&&vehicleSpeed>2){log.info('input disabled while vehicle moving');return;}
-        if(editor){return keypadAction(keysForEditor()[editor.cursor]);}
-        if(selectField){selectField=false;return fieldIndex===4?render():beginEdit(FIELDS[page][fieldIndex]);}
-        if(page===0){return beginEdit('targetE');}
-        if(page===1||page===3){selectField=true;fieldIndex=0;return render();}
-        // live readings page: go to inputs and show field selection
-        page=1;selectField=true;fieldIndex=0;return render();
     }
     function keypadAction(action){
         if(!editor)return;
@@ -172,14 +152,14 @@ mgu.run({
         editor.error='';return render();
     }
     // Incoming canvas touch coordinates are routed by the installed GPU renderer.
-    // Hardware HMI bar buttons remain the primary control when touch routing is unavailable.
+    // Keep the OEM Settings dropdown as a fallback if touch routing isn't enabled.
     ctx.onTouch((x,y)=>{
         log.info('canvas touch: '+Math.round(x)+','+Math.round(y));
         if(editor){
             if(editor.kind==='choice'){
-                if(inBox(x,y,[375,210,240,100])|| (editor.key!=='fuelMode'&&inBox(x,y,[470,210,305,100])))return keypadAction('DME');
-                if(inBox(x,y,[680,210,240,100])|| (editor.key!=='fuelMode'&&inBox(x,y,[825,210,305,100])))return keypadAction('MANUAL');
-                if(editor.key==='fuelMode'&&inBox(x,y,[985,210,240,100]))return keypadAction('KOMBI');
+                if(inBox(x,y,[348,210,280,100]))return keypadAction('DME');
+                if(inBox(x,y,[659,210,280,100]))return keypadAction('MANUAL');
+                if(inBox(x,y,[969,210,280,100]))return keypadAction('KOMBI');
                 if(inBox(x,y,[610,352,380,67]))return keypadAction('CANCEL');
             }else{
                 const grid=[['1','2','3'],['4','5','6'],['7','8','9'],['0','.','DEL']];
@@ -196,35 +176,25 @@ mgu.run({
         for(let i=0;i<inputBounds.length;i++)if(inBox(x,y,inputBounds[i]))return beginEdit(fields[i]);
     });
     function drawEditor(cv,t){
-        if(selectField&&!editor){
-            if(fieldIndex<4){
-                const b=inputBounds[fieldIndex];
-                marker(cv,t,b[0]+3,b[1]+3,b[2]-6,b[3]-6);
-            }
-            cv.roundRect(220,470,1160,39,7,'#28210a');
-            cv.text(fieldIndex===4?'CANCEL EDITING - PRESS EDIT / OK':'PREVIOUS / NEXT: CHOOSE FIELD     EDIT / OK: OPEN KEYPAD',800,495,22,YELLOW,{font:'bold',align:'center'});
-            return;
-        }
         if(!editor)return;
         cv.fillRect(0,0,W,H,withAlpha('#000000',.84));
         if(editor.kind==='choice'){
-            cv.roundRect(315,104,970,340,17,'#171b22');
-            cv.strokeRoundRect(315,104,970,340,17,2,withAlpha('#ffffff',.3));
-            G.stripes(cv,t,345,119,900);
-            cv.text(FIELD_LABEL[editor.key],345,168,38,t.text,{font:'bold'});
-            const opt=editor.key==='fuelMode'?[['DME',375,210],['MANUAL',680,210],['KOMBI',985,210]]:[['DME',470,210],['MANUAL',825,210]];
+            cv.roundRect(430,104,740,340,17,'#171b22');
+            cv.strokeRoundRect(430,104,740,340,17,withAlpha('#ffffff',.3),2);
+            G.stripes(cv,t,460,119,675);
+            cv.text(FIELD_LABEL[editor.key],460,168,38,t.text,{font:'bold'});
+            const opt=editor.key==='fuelMode'?[['DME',348,210],['MANUAL',659,210],['KOMBI',969,210]]:[['DME',470,210],['MANUAL',825,210]];
             for(const [name,x,y] of opt){
-                const ww=editor.key==='fuelMode'?240:305;
+                const ww=editor.key==='fuelMode'?280:305;
                 cv.roundRect(x,y,ww,100,10,withAlpha('#ffffff',.1));
-                cv.strokeRoundRect(x,y,ww,100,10,editor.cursor===opt.findIndex(o=>o[0]===name)?5:2,editor.cursor===opt.findIndex(o=>o[0]===name)?YELLOW:withAlpha('#ffffff',.3));
+                cv.strokeRoundRect(x,y,ww,100,10,YELLOW,2);
                 cv.text(name,x+ww/2,y+61,37,t.text,{font:'bold',align:'center'});
             }
             cv.roundRect(610,352,380,67,8,withAlpha('#ffffff',.1));
-            cv.text('CANCEL',800,397,30,editor.cursor===opt.length?YELLOW:t.text,{font:'bold',align:'center'});
-            if(editor.cursor===opt.length)cv.strokeRoundRect(608,350,384,71,8,4,YELLOW);
+            cv.text('CANCEL',800,397,30,t.text,{font:'bold',align:'center'});
         }else{
             cv.roundRect(360,55,880,415,17,'#171b22');
-            cv.strokeRoundRect(360,55,880,415,17,2,withAlpha('#ffffff',.35));
+            cv.strokeRoundRect(360,55,880,415,17,withAlpha('#ffffff',.35),2);
             G.stripes(cv,t,380,68,836);
             cv.text(FIELD_LABEL[editor.key],390,118,32,t.text,{font:'bold'});
             cv.text(editor.draft||'Enter value',392,213,editor.draft?66:36,editor.draft?YELLOW:t.dim,{font:editor.draft?'num':'label'});
@@ -234,17 +204,14 @@ mgu.run({
             cv.text('CANCEL',491,370,24,t.text,{font:'bold',align:'center'});
             cv.roundRect(388,401,207,54,8,YELLOW);
             cv.text('SAVE',491,438,25,'#111111',{font:'bold',align:'center'});
-            if(editor.cursor===12)cv.strokeRoundRect(386,331,211,58,8,5,YELLOW);
-            if(editor.cursor===13)cv.strokeRoundRect(386,399,211,58,8,5,'#ffffff');
             const grid=[['1','2','3'],['4','5','6'],['7','8','9'],['0','.','DEL']];
             for(let r=0;r<4;r++)for(let c=0;c<3;c++){
                 const x=654+c*174,y=112+r*85,k=grid[r][c];
                 cv.roundRect(x,y,157,74,9,withAlpha('#ffffff',.12));
-                cv.strokeRoundRect(x,y,157,74,9,editor.cursor===r*3+c?5:1,editor.cursor===r*3+c?YELLOW:withAlpha('#ffffff',.18));
+                cv.strokeRoundRect(x,y,157,74,9,withAlpha('#ffffff',.18),1);
                 cv.text(k,x+79,y+49,k==='DEL'?24:36,t.text,{font:'bold',align:'center'});
             }
         }
-        cv.text('PREVIOUS / NEXT: HIGHLIGHT     EDIT / OK: SELECT',800,494,19,YELLOW,{font:'bold',align:'center'});
     }
     sig.watch('de.bmw.infotainment.vehicle.Vehicle2','1',{
         statusCarSpeed2:v=>{
@@ -260,10 +227,13 @@ mgu.run({
             if(f!==null&&Number.isInteger(n)&&n>=0&&n<=4095){rawKombi=n;kombiAt=Date.now();kombiSamples++;}
         }
     },log,{pollMs:30000}).then(r=>{if(r.error)log.warn('KombiIF: '+r.error);});
-    ui.onClick('BTN_PAGE',()=>navigate(1));
-    ui.onClick('BTN_PREV',()=>navigate(-1));
-    ui.onClick('BTN_EDIT',()=>editOrSelect());
-    ctx.onTab(i=>{if(!editor&&!selectField&&i>=0&&i<PAGES.length)return setPage(i);});
+    ui.onClick('BTN_PAGE',()=>setPage(page+1));
+    ui.onClick('BTN_PREV',()=>setPage(page-1));
+    ui.onClick('BTN_EDIT',()=>{
+        if(num(vehicleSpeed)&&vehicleSpeed>2)return;
+        return ui.open(page===0||page===1?'EDIT_INPUTS':'EDIT_SOURCES');
+    });
+    ctx.onTab(i=>{if(i>=0&&i<PAGES.length)return setPage(i);});
     settings.onChange((key)=>{
         if(key==='fuelMode'||key==='ethanolMode')nextReadAt=Date.now()+350;
     });
@@ -300,7 +270,7 @@ mgu.run({
             if(num(b.minPossible)&&num(b.maxPossible))
                 cv.text('Achievable: E'+fmt(b.minPossible,1)+' - E'+fmt(b.maxPossible,1),827,396,24,t.dim);
         }
-        banner(cv,t,'PRESS EDIT / OK TO CHANGE DESIRED BLEND  |  MIX QUANTITIES ARE ESTIMATES',t.dim);
+        banner(cv,t,'TAP DESIRED BLEND TO EDIT  |  93 + E85 QUANTITIES ARE ESTIMATES',t.dim);
     }
     function drawInputs(cv,t){
         const fields=FIELDS[1],xy=[[18,48],[808,48],[18,265],[808,265]],w=770,h=204;
@@ -309,10 +279,10 @@ mgu.run({
             const v=Number(settings.get(k)),shown=k==='capacity'?fmt(v,1):fmt(v,0)+'%';
             value(cv,x+30,y+143,shown,t,75,k==='targetE'?YELLOW:t.text);
             if(k==='capacity')subline(cv,x+208,y+144,'US gal',t,25);
-            cv.text('EDIT / OK TO CHANGE',x+w-32,y+57,18,YELLOW,{align:'right',font:'bold'});
+            cv.text('EDIT VALUES IN BOTTOM BAR',x+w-32,y+57,18,YELLOW,{align:'right',font:'bold'});
             cv.text(k==='capacity'?'X3M default 17.2 US gal':k==='targetE'?'Set desired final ethanol':k==='lowE'?'Premium gasoline ethanol %':'E85 dispenser actual ethanol %',x+350,y+160,23,t.dim);
         });
-        banner(cv,t,'PRESS EDIT / OK TO SELECT AN INPUT, THEN TYPE DIGITS USING CONTROLLER',t.dim);
+        banner(cv,t,'PRESS EDIT VALUES TO CHANGE FUEL INPUTS USING BMW DROPDOWNS',t.dim);
     }
     function drawLive(cv,t){
         const f=fuelPct(),e=ethanolPct();
@@ -340,14 +310,12 @@ mgu.run({
                 fmt(Number(settings.get(k)),1)+'%';
             const fontSize=show.length>12?46:68;
             value(cv,x+30,y+145,show,t,fontSize,t.text);
-            cv.text('EDIT / OK TO CHANGE',x+w-32,y+57,18,YELLOW,{align:'right',font:'bold'});
+            cv.text('EDIT VALUES IN BOTTOM BAR',x+w-32,y+57,18,YELLOW,{align:'right',font:'bold'});
             cv.text(k==='manualFuel'?'Only used if fuel source is Manual':k==='manualE'?'Only used if ethanol source is Manual':'Choose live diagnostics or manual fallback',x+37,y+188,21,t.dim);
         });
-        banner(cv,t,'EDIT / OK: DME PID2F / KOMBI 0-60 (TRIAL) / MANUAL',t.dim);
+        banner(cv,t,'EDIT VALUES: DME PID2F / KOMBI 0-60 (TRIAL) / MANUAL',t.dim);
     }
     async function render(){
-        // If the car starts moving during editing, dismiss the keypad.
-        if((editor||selectField)&&num(vehicleSpeed)&&vehicleSpeed>2){editor=null;selectField=false;}
         // Only read when the app is on screen. Do not inhibit reads because the car is moving.
         // No background timer or additional vehicle sessions. Requests are sequential and back off on errors.
         if(ui.isVisible('MAIN')&&ui.hasFocus('MAIN')&&!busy&&Date.now()>=nextReadAt){
@@ -366,6 +334,6 @@ mgu.run({
     }
     ctx.loop('MAIN',2,render);
     render().catch(e=>log.warn('render: '+e));
-    log.info('E Blend 0.1.6: editor on main canvas with hardware HMI buttons; DME/KOMBI/manual fuel, 1s polling');
+    log.info('E Blend 0.1.5: native dropdown editing, DME/KOMBI/manual fuel, sample counters, 1s polling');
  }
 });

@@ -1,13 +1,18 @@
-"""Regression guard: MGU Store accepts MGU_OUT or a declared output, not both."""
-import json
+"""Store builder must write exactly one package to MGU_OUT, no BMW SDK."""
+import os
 from pathlib import Path
-
-root = Path(__file__).resolve().parent.parent
-component = json.loads((root / "mgu-repo.json").read_text(encoding="utf-8"))["components"][0]
-build = component["build"]
-builder = (root / build["python"]).read_text(encoding="utf-8")
-assert build["sdk"] == "oap-sdk"
-assert "output" not in build, "MGU Store would copy the artifact after the builder already placed it in MGU_OUT"
-assert "MGU_OUT" in builder
-assert "tmpname.replace(output)" in builder
-print("MGU Store output contract: only MGU_OUT is used")
+import subprocess
+import sys
+import tarfile
+import tempfile
+root=Path(__file__).resolve().parent.parent
+with tempfile.TemporaryDirectory() as td:
+    env={**os.environ,'MGU_OUT':td}
+    subprocess.run([sys.executable,str(root/'tools/build_store.py'),'ethanol_mix'],check=True,cwd=root,env=env)
+    files=list(Path(td).iterdir())
+    assert len(files)==1 and files[0].name=='ethanol_mix@0.1.5.tgz'
+    with tarfile.open(files[0],'r:gz') as tar:
+        names=tar.getnames()
+        assert 'package/javascript/app.js' in names
+        assert not any(n.startswith('package/node_modules/oap-sdk/') for n in names)
+print('Stable v0.1.5 SDK-free Store package: passed')

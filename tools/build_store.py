@@ -1,91 +1,73 @@
 #!/usr/bin/env python3
-"""MGU Store on-unit builder: make an SDK-free, redistributable OAP package.
+"""MGU Store builder: pack the exact original v0.1.5 OAP tree, excluding BMW SDK.
 
-The Store injects the unit's generated oap-sdk in ./oap-sdk before calling us.
-The upstream toolkit builder produces a local .mgu and .tgz with that donor SDK;
-this wrapper strips the SDK from the .tgz and leaves ONLY an SDK-free .tgz
-in the designated output path.  Do not distribute the intermediate .mgu.
+The original v0.1.5 source/ tree was recovered from the working .mgu archive.
+The proprietary node_modules/oap-sdk is NOT stored in the GitHub repository or
+output archive. MGU Store fills missing SDK using a donor from the user's car.
+No UI source is recompiled and no RHMI resources are regenerated.
 """
-import copy
-import io
+import hashlib
 import json
 import os
 from pathlib import Path
-import subprocess
 import sys
 import tarfile
 import tempfile
 
 ROOT = Path(__file__).resolve().parent.parent
-APPS = ROOT / 'apps'
-SDK = ROOT / 'oap-sdk'
+TREE = ROOT / 'store-v015' / 'package'
+HASHES = ROOT / 'store-v015' / 'original_file_sha256.json'
 
 
 def main():
     app_id = sys.argv[1] if len(sys.argv) > 1 else 'ethanol_mix'
-    if not (app_id == 'ethanol_mix' or app_id.startswith('ethanol_mix') and app_id[len('ethanol_mix'):].isdigit()):
-        sys.exit('Unexpected app id: ' + app_id)
-    src = APPS / 'ethanol_mix'
-    actual = APPS / app_id
-    created = False
-    if src != actual:
-        import shutil
-        if actual.exists():
-            sys.exit('Build destination already exists: ' + str(actual))
-        shutil.copytree(src, actual)
-        created = True
+    if app_id != 'ethanol_mix':
+        sys.exit('This frozen original package only supports id=ethanol_mix, got ' + app_id)
+    manifest = json.loads(HASHES.read_text(encoding='utf-8'))
+    expected = manifest['file_sha256']
+    actual = {
+        p.relative_to(TREE).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
+        for p in TREE.rglob('*') if p.is_file()
+    }
+    if actual != expected:
+        missing = sorted(set(expected) - set(actual))
+        extra = sorted(set(actual) - set(expected))
+        changed = sorted(k for k in set(actual) & set(expected) if actual[k] != expected[k])
+        sys.exit(f'Frozen v0.1.5 contents changed. Missing={missing}, extra={extra}, changed={changed}')
+    if any(p.startswith('node_modules/oap-sdk/') for p in actual):
+        sys.exit('BMW SDK MUST NOT be packed or committed')
+    pkg = json.loads((TREE / 'package.json').read_text(encoding='utf-8'))
+    if pkg.get('name') != app_id or pkg.get('version') != '0.1.5':
+        sys.exit('Unexpected source package identity/version')
+    outdir = Path(os.environ.get('MGU_OUT', str(ROOT / 'dist'))).resolve()
+    outdir.mkdir(parents=True, exist_ok=True)
+    output = outdir / 'ethanol_mix@0.1.5.tgz'
+    with tempfile.NamedTemporaryFile(dir=str(outdir), prefix='.ethanol_mix_', suffix='.tgz', delete=False) as f:
+        temp = Path(f.name)
     try:
-        manifest = actual / 'app.json'
-        raw = manifest.read_text(encoding='utf-8')
-        spec = json.loads(raw)
-        spec['id'] = app_id
-        manifest.write_text(json.dumps(spec, indent=2) + '\n', encoding='utf-8')
-        if not (SDK / 'index.js').is_file() or not (SDK / 'package.json').is_file():
-            sys.exit('No donor SDK: MGU Store must inject oap-sdk via build.sdk')
-        subprocess.run([sys.executable, str(ROOT / 'kit/tools/build.py'), app_id], cwd=str(ROOT), check=True)
-        version = spec['version']
-        compiled = ROOT / 'dist' / (app_id + '@' + version + '.tgz')
-        output_dir = Path(os.environ.get('MGU_OUT', str(ROOT / 'dist'))).resolve()
-        output_dir.mkdir(parents=True, exist_ok=True)
-        output = output_dir / compiled.name
-        # Preserve every source package entry except proprietary oap-sdk,
-        # generated locally from the head unit firmware donor.
-        with tempfile.NamedTemporaryFile(dir=str(output_dir), suffix='.tgz', delete=False) as temp:
-            tmpname = Path(temp.name)
-        try:
-            with tarfile.open(compiled, 'r:gz') as src_tar, tarfile.open(tmpname, 'w:gz') as dst_tar:
-                members = src_tar.getmembers()
-                for member in members:
-                    name = member.name.removeprefix('./')
-                    if name.startswith('package/node_modules/oap-sdk/') or name == 'package/node_modules/oap-sdk':
-                        continue
-                    if not member.isfile():
-                        dst_tar.addfile(member)
-                    else:
-                        data = src_tar.extractfile(member)
-                        if data is None:
-                            raise RuntimeError('Cannot extract ' + member.name)
-                        dst_tar.addfile(member, data)
-            if output.exists() and output != compiled:
-                output.unlink()
-            tmpname.replace(output)
-        finally:
-            if tmpname.exists():
-                tmpname.unlink()
-        # MGU Store checks the output, not the scratch build.
-        with tarfile.open(output, 'r:gz') as verify:
-            names = verify.getnames()
-            assert 'package/package.json' in names
-            assert 'package/rhmiData/application.json' in names
-            assert not any('node_modules/oap-sdk/' in n for n in names)
-        print('SDK-free Store package: ' + str(output))
+        with tarfile.open(temp, 'w:gz') as tar:
+            for p in sorted(TREE.rglob('*')):
+                if not p.is_file():
+                    continue
+                rel = p.relative_to(TREE).as_posix()
+                # Include the OAP package rooted under `package/`, like npm pack.
+                info = tar.gettarinfo(str(p), arcname='package/' + rel)
+                info.uid = info.gid = 0
+                info.uname = info.gname = ''
+                info.mtime = 0
+                with p.open('rb') as handle:
+                    tar.addfile(info, handle)
+        temp.replace(output)
     finally:
-        if created:
-            import shutil
-            shutil.rmtree(actual)
-        else:
-            # Restore exact source manifest if running against the primary id.
-            manifest.write_text(raw, encoding='utf-8')
+        if temp.exists():
+            temp.unlink()
+    with tarfile.open(output, 'r:gz') as tar:
+        names = tar.getnames()
+        assert 'package/javascript/app.js' in names
+        assert 'package/rhmiData/application.json' in names
+        assert 'package/package.json' in names
+        assert not any('node_modules/oap-sdk/' in n for n in names)
+    print('Verified frozen original v0.1.5 Store package: ' + str(output))
 
 
 if __name__ == '__main__':

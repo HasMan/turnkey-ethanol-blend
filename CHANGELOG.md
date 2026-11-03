@@ -1,28 +1,13 @@
-## v0.1.7-beta — software-render recovery test
-
-- Defaults to software rendering instead of the optional `mgu-render` GPU overlay.
-- One-time `renderer` settings migration (`reset: 1`) also changes persisted `auto` values to `software` on update. User can re-enable GPU rendering later if desired.
-- Keeps app ID `ethanol_mix`, calculation code, and all fuel input settings unchanged.
-- Investigates an in-car blank canvas after Store installation; **not yet verified on the vehicle**. If the canvas remains blank, collect `ethanol_mix.log` and do not guess at further fixes.
-- No BMW SDK distributed.
-
 # Changelog
 
-## v0.1.6-beta (source preview)
+## v0.1.5 — restored original package for MGU Store
 
-- Reworked input editing into an in-screen controller-operated editor.
-- Retained sequential diagnostics with a one-second target interval.
-- Supports DME PID 2F, manual fuel percentage and experimental KOMBI raw/60.
-- Kept M-inspired colors, four pages and ethanol blend-to-full calculator.
-- Physical-MGU editor functionality has not yet been verified.
+- Reverted the Store's published app to the original v0.1.5 source and HMI resources.
+- Replaced the experimental source recompilation path with a byte-verified, SDK-free package assembled from the original working build.
+- Removed the v0.1.6 inline edit interface and unsuccessful v0.1.7 renderer workaround from the published Store app.
+- The Store still supplies its own BMW SDK donor on each vehicle; physical Store-install validation remains pending.
 
-## v0.1.5 (previous in-car build)
+## v0.1.7-beta / v0.1.6-beta — withdrawn from published Store branch
 
-- Introduced native BMW dropdown editor, which did not render reliably on the test vehicle.
-
-## MGU Store source distribution (repository update)
-- Added root `mgu-repo.json` for iDrive 7 branch-based repository source.
-- Added source-build wrapper producing SDK-free `.tgz` using the Store's donor SDK.
-- Included a minimal MIT-licensed upstream build/runtime subset with attribution.
-- Added Store installation and troubleshooting documentation, icon, CI and manifest tests.
-- Application features and version remain **0.1.6-beta**, pending physical head-unit testing.
+- These builds produced blank app content when installed through the Store on the tester's X3M.
+- Retained in Git history for troubleshooting, but do not install them in place of v0.1.5.

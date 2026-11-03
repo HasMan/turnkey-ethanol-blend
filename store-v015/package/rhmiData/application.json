@@ -1,0 +1,53 @@
+{
+  "schemaVersion": "1.3.0",
+  "application": {
+    "uuid": "4b35b87e-5525-5965-8ebb-a6bdaed11641",
+    "type": "OnlineApp",
+    "name": "ethanol_mix",
+    "vendor": "TurnKey Performance",
+    "version": "0.1.5",
+    "defaultLanguage": "en_GB",
+    "stringBundleUuid": "932a5701-8149-5d64-b268-75360cd5a1a2",
+    "resourceBundleUuid": "4064d7c9-6d96-5a88-89b2-e8e61738dbe7",
+    "entryPoints": [
+      {
+        "name": "ETHANOL_MIX_ENTRY",
+        "uuid": "cfdcb8c6-e618-51fe-a582-df6ee6201510",
+        "textId": "SID_ETHANOL_MIX_TITLE",
+        "icon": "ethanol_mix_icon.png",
+        "insertionStateId": 20974,
+        "insertionFocusId": 2,
+        "insertionMode": "INSERT_BELOW",
+        "insertionOrder": 0,
+        "insertionPriority": 0,
+        "previewType": "NONE",
+        "bookmarkable": true,
+        "private": false,
+        "appearance": "DEFAULT",
+        "isGroupHeader": false,
+        "insertionGroup": 0
+      }
+    ],
+    "uiDescriptions": [
+      {
+        "applicationFilePath": "./uiDescriptions/ID7/application.xml",
+        "uiDescriptionFilePath": "./uiDescriptions/ID7/uiDescription.json",
+        "hmi": [
+          "ID7"
+        ]
+      }
+    ],
+    "variantGroups": [
+      {
+        "stringsPath": "./variantGroups/Common/texts",
+        "resourcesPath": "./variantGroups/Common/images",
+        "hmi": [
+          "ID7"
+        ],
+        "brands": [
+          "BMW"
+        ]
+      }
+    ]
+  }
+}

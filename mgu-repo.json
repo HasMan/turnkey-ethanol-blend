@@ -5,8 +5,8 @@
       "id": "ethanol_mix",
       "kind": "app",
       "title": "TurnKey E Blend",
-      "description": "Live ethanol and fuel readings plus blend-to-full calculator (experimental, calibration-specific).",
-      "version": "0.1.7",
+      "description": "Original v0.1.5 interface; live ethanol/fuel readouts and blend-to-full calculator. Tested only on the original 2023 X3M calibration.",
+      "version": "0.1.5",
       "path": "apps/ethanol_mix",
       "mguHmi": [
         "ID7"
@@ -15,8 +15,7 @@
         "python": "tools/build_store.py",
         "args": [
           "{id}"
-        ],
-        "sdk": "oap-sdk"
+        ]
       }
     }
   ]

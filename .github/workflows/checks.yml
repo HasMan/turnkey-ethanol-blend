@@ -1,4 +1,4 @@
-name: Source checks (no BMW SDK)
+name: Stable v0.1.5 checks (no BMW SDK)
 on:
   push:
   pull_request:
@@ -13,12 +13,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Calculator tests
+      - name: Original code and package verification
         run: |
           node tests/blend.test.js
           node tests/fuel_obd.test.js
-          python tests/test_store_metadata.py
-      - name: Syntax checks
-        run: |
           node --check apps/ethanol_mix/main.js
-          python -m py_compile tools/build_store.py kit/tools/build.py
+          python tests/test_store_metadata.py
+          python tests/test_store_output_contract.py
+          python tests/test_software_fallback.py

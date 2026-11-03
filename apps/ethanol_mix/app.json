@@ -1,8 +1,8 @@
 {
   "id": "ethanol_mix",
   "title": "TurnKey E Blend",
-  "description": "M-style ethanol blending, reliable inline numeric editing through iDrive controller, DME PID 2F, experimental KOMBI fuel, 1s read-only polling",
-  "version": "0.1.7",
+  "description": "M-style ethanol blending with native BMW dropdown editor, DME PID 2F, experimental KOMBI fuel, manual fallback, 1s read-only polling",
+  "version": "0.1.5",
   "vendor": "TurnKey Performance",
   "loggingId": "OAA7",
   "iconGlyph": "E%",
@@ -31,16 +31,42 @@
       "buttons": [
         [
           "BTN_PREV",
-          "Previous"
+          "Prev page"
         ],
         [
           "BTN_PAGE",
-          "Next"
+          "Next page"
         ],
         [
           "BTN_EDIT",
-          "Edit / OK"
+          "Edit values"
         ]
+      ]
+    },
+    {
+      "name": "EDIT_INPUTS",
+      "kind": "settings",
+      "title": "Fuel Inputs - Select a Value",
+      "settings": true,
+      "keys": [
+        "targetE",
+        "lowE",
+        "highE",
+        "capacity"
+      ]
+    },
+    {
+      "name": "EDIT_SOURCES",
+      "kind": "settings",
+      "title": "Data Sources - Select a Value",
+      "settings": true,
+      "keys": [
+        "fuelMode",
+        "ethanolMode",
+        "manualFuel",
+        "manualE",
+        "theme",
+        "renderer"
       ]
     }
   ],
@@ -704,7 +730,7 @@
       "key": "renderer",
       "label": "Renderer",
       "type": "choice",
-      "default": "software",
+      "default": "auto",
       "options": [
         [
           "auto",
@@ -714,12 +740,7 @@
           "software",
           "Software"
         ]
-      ],
-      "reset": 1
+      ]
     }
-  ],
-  "noAutoSettings": true,
-  "mguHmi": [
-    "ID7"
   ]
 }
